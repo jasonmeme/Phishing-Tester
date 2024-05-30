@@ -33,19 +33,15 @@ def send_phishing_email():
     unique_id = str(uuid.uuid4())
     tracking_url = url_for('track_click', id=unique_id, _external=True)
     
-    # Shorten the URL using TinyURL API
-    response = requests.get(f'http://tinyurl.com/api-create.php?url={tracking_url}')
-    shortened_url = response.text
-    
     # Store tracking information in the database
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
     c.execute('''INSERT INTO clicks (id, email, clicked) VALUES (?, ?, ?)''', (unique_id, email, False))
     conn.commit()
     conn.close()
 
     subject = 'Test Phishing Email'
-    body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {shortened_url}'
+    body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
     
     msg = MIMEText(body)
     msg['Subject'] = subject
