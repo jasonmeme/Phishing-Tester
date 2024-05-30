@@ -4,85 +4,112 @@ from flask import Flask, request, render_template, url_for
 import smtplib
 from email.mime.text import MIMEText
 import uuid
-import sqlite3
-import requests
+import psycopg2
 import os
+import logging
 
 app = Flask(__name__)
 
-DATABASE = '/tmp/phishing.db'
+# Database connection parameters
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+def get_db_connection():
+    conn = psycopg2.connect(DATABASE_URL)
+    return conn
 
 def init_db():
-    if not os.path.exists(DATABASE):
-        conn = sqlite3.connect(DATABASE)
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS clicks
-                    (id TEXT PRIMARY KEY, email TEXT, clicked BOOLEAN)''')
-        conn.commit()
-        conn.close()
-
-@app.before_first_request
-def setup():
-    if not os.path.exists('/tmp'):
-        os.makedirs('/tmp')
-    init_db()
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS clicks (
+            id UUID PRIMARY KEY,
+            email TEXT NOT NULL,
+            clicked BOOLEAN NOT NULL
+        )
+    ''')
+    conn.commit()
+    cur.close()
+    conn.close()
 
 @app.route('/')
 def index():
+    init_db()  # Initialize database
     return render_template('index.html')
 
 @app.route('/send_phishing_email', methods=['POST'])
 def send_phishing_email():
-    email = request.form['email']
-    unique_id = str(uuid.uuid4())
-    tracking_url = url_for('track_click', id=unique_id, _external=True)
-    
-    # Store tracking information in the database
-    conn = sqlite3.connect(DATABASE)
-    c = conn.cursor()
-    c.execute('''INSERT INTO clicks (id, email, clicked) VALUES (?, ?, ?)''', (unique_id, email, False))
-    conn.commit()
-    conn.close()
+    try:
+        init_db()  # Initialize database
+        email = request.form['email']
+        unique_id = str(uuid.uuid4())
+        tracking_url = url_for('track_click', id=unique_id, _external=True)
+        
+        # Store tracking information in the database
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            INSERT INTO clicks (id, email, clicked) VALUES (%s, %s, %s)
+        ''', (unique_id, email, False))
+        conn.commit()
+        cur.close()
+        conn.close()
 
-    subject = 'Test Phishing Email'
-    body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
-    
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
-    msg['To'] = email
-    
-    smtp_server = 'smtp.gmail.com'
-    smtp_port = 587
-    smtp_user = os.getenv('SMTP_USER')
-    smtp_password = os.getenv('SMTP_PASSWORD')
-    
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()  # Upgrade the connection to a secure encrypted SSL/TLS connection
-        server.login(smtp_user, smtp_password)
-        server.sendmail(msg['From'], [msg['To']], msg.as_string())
-    
-    return 'Phishing email sent!'
+        subject = 'Test Phishing Email'
+        body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
+        
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
+        msg['To'] = email
+        
+        smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.getenv('SMTP_PORT', 587))
+        smtp_user = os.getenv('SMTP_USER')
+        smtp_password = os.getenv('SMTP_PASSWORD')
+        
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Upgrade the connection to a secure encrypted SSL/TLS connection
+            server.login(smtp_user, smtp_password)
+            server.sendmail(msg['From'], [msg['To']], msg.as_string())
+        
+        return 'Phishing email sent!'
+    except Exception as e:
+        logging.error(f"Error in send_phishing_email: {e}")
+        return 'Internal Server Error', 500
 
 @app.route('/track/<id>')
 def track_click(id):
-    # Update database to indicate the link was clicked
-    conn = sqlite3.connect(DATABASE)
-    c = conn.cursor()
-    c.execute('''UPDATE clicks SET clicked = ? WHERE id = ?''', (True, id))
-    conn.commit()
-    conn.close()
-    
-    return 'Link clicked!'
+    try:
+        init_db()  # Initialize database
+        # Update database to indicate the link was clicked
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            UPDATE clicks SET clicked = TRUE WHERE id = %s
+        ''', (id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return 'Link clicked!'
+    except Exception as e:
+        logging.error(f"Error in track_click: {e}")
+        return 'Internal Server Error', 500
 
 @app.route('/results')
 def view_results():
-    conn = sqlite3.connect(DATABASE)
-    c = conn.cursor()
-    c.execute('''SELECT * FROM clicks''')
-    rows = c.fetchall()
-    conn.close()
-    return render_template('results.html', rows=rows)
+    try:
+        init_db()  # Initialize database
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM clicks')
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return render_template('results.html', rows=rows)
+    except Exception as e:
+        logging.error(f"Error in view_results: {e}")
+        return 'Internal Server Error', 500
 
 if __name__ == '__main__':
     app.run(debug=True)
