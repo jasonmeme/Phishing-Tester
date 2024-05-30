@@ -10,7 +10,7 @@ import os
 
 app = Flask(__name__)
 
-DATABASE = os.path.join(os.getcwd(), 'phishing.db')
+DATABASE = '/tmp/phishing.db'
 
 def init_db():
     if not os.path.exists(DATABASE):
@@ -21,7 +21,11 @@ def init_db():
         conn.commit()
         conn.close()
 
-init_db()
+@app.before_first_request
+def setup():
+    if not os.path.exists('/tmp'):
+        os.makedirs('/tmp')
+    init_db()
 
 @app.route('/')
 def index():
