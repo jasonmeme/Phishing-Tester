@@ -26,7 +26,6 @@ init_db()
 @app.route('/')
 def index():
     return render_template('index.html')
-init_db()
 
 @app.route('/')
 def index():
