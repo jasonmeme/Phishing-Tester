@@ -10,7 +10,7 @@ import os
 
 app = Flask(__name__)
 
-DATABASE = os.path.join(os.getcwd(), 'phishing.db')
+DATABASE = '/tmp/phishing.db'
 
 def init_db():
     if not os.path.exists(DATABASE):
@@ -26,6 +26,11 @@ init_db()
 @app.route('/')
 def index():
     return render_template('index.html')
+init_db()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/send_phishing_email', methods=['POST'])
 def send_phishing_email():
@@ -34,7 +39,7 @@ def send_phishing_email():
     tracking_url = url_for('track_click', id=unique_id, _external=True)
     
     # Store tracking information in the database
-    conn = sqlite3.connect('phishing.db')
+    conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute('''INSERT INTO clicks (id, email, clicked) VALUES (?, ?, ?)''', (unique_id, email, False))
     conn.commit()
@@ -45,15 +50,13 @@ def send_phishing_email():
     
     msg = MIMEText(body)
     msg['Subject'] = subject
-    msg['From'] = 'bobsterthebob55@gmail.com'  # Replace with your email
+    msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
     msg['To'] = email
     
-    # Update with your SMTP server configuration
-    # Update with your Gmail configuration
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
-    smtp_user = 'bobsterthebob55@gmail.com'
-    smtp_password = 'ttva tajs reka yklc'
+    smtp_user = os.getenv('SMTP_USER')
+    smtp_password = os.getenv('SMTP_PASSWORD')
     
     with smtplib.SMTP(smtp_server, smtp_port) as server:
         server.starttls()  # Upgrade the connection to a secure encrypted SSL/TLS connection
