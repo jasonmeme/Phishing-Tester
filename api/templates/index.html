@@ -3,13 +3,19 @@
 <html>
 <head>
     <title>Phishing Simulation</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Phishing Simulation Tool</h1>
-    <form action="/send_phishing_email" method="post">
-        <label for="email">Enter your email:</label>
-        <input type="email" id="email" name="email" required>
-        <button type="submit">Send Phishing Email</button>
-    </form>
+    <div class="container">
+        <h1>Phishing Simulation Tool</h1>
+        <form action="/send_phishing_email" method="post">
+            <label for="email">Enter your email:</label>
+            <input type="email" id="email" name="email" required>
+            <button type="submit">Send Phishing Email</button>
+        </form>
+    </div>
+    <div class="footer">
+        <p>&copy; 2024 Phishing Simulation Tool</p>
+    </div>
 </body>
 </html>

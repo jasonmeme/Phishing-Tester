@@ -3,20 +3,26 @@
 <html>
 <head>
     <title>Phishing Simulation Results</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Phishing Simulation Results</h1>
-    <table>
-        <tr>
-            <th>Email</th>
-            <th>Clicked</th>
-        </tr>
-        {% for row in rows %}
-        <tr>
-            <td>{{ row[1] }}</td>
-            <td>{{ 'Yes' if row[2] else 'No' }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="container">
+        <h1>Phishing Simulation Results</h1>
+        <table>
+            <tr>
+                <th>Email</th>
+                <th>Clicked</th>
+            </tr>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row[1] }}</td>
+                <td>{{ 'Yes' if row[2] else 'No' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="footer">
+        <p>&copy; 2024 Phishing Simulation Tool</p>
+    </div>
 </body>
 </html>
