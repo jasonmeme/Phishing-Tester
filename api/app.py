@@ -1,19 +1,13 @@
-from flask import Flask, request, render_template, redirect, url_for
+# api/app.py
+
+from flask import Flask, request, render_template, url_for
 import smtplib
 from email.mime.text import MIMEText
 import uuid
 import sqlite3
+import requests
 
 app = Flask(__name__)
-
-# Initialize database
-def init_db():
-    conn = sqlite3.connect('phishing.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS clicks
-                 (id TEXT PRIMARY KEY, email TEXT, clicked BOOLEAN)''')
-    conn.commit()
-    conn.close()
 
 @app.route('/')
 def index():
@@ -25,6 +19,10 @@ def send_phishing_email():
     unique_id = str(uuid.uuid4())
     tracking_url = url_for('track_click', id=unique_id, _external=True)
     
+    # Shorten the URL using TinyURL API
+    response = requests.get(f'http://tinyurl.com/api-create.php?url={tracking_url}')
+    shortened_url = response.text
+    
     # Store tracking information in the database
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
@@ -33,7 +31,7 @@ def send_phishing_email():
     conn.close()
 
     subject = 'Test Phishing Email'
-    body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
+    body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {shortened_url}'
     
     msg = MIMEText(body)
     msg['Subject'] = subject
@@ -75,5 +73,4 @@ def view_results():
     return render_template('results.html', rows=rows)
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)
