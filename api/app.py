@@ -1,6 +1,6 @@
 # api/app.py
 
-from flask import Flask, request, render_template, url_for, stream_with_context, Response
+from flask import Flask, request, render_template, url_for, redirect, flash
 import smtplib
 from email.mime.text import MIMEText
 import uuid
@@ -10,6 +10,7 @@ import logging
 import csv
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
 
 # Database connection parameters
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -80,57 +81,55 @@ def send_phishing_email():
 
 @app.route('/send_phishing_emails', methods=['POST'])
 def send_phishing_emails():
-    @stream_with_context
-    def generate():
+    try:
+        init_db()  # Initialize database
         file = request.files['csv-file']
         if not file:
-            yield "0"
-            return
+            flash('No file uploaded', 'error')
+            return redirect(url_for('index'))
+        
         file_data = file.read().decode('utf-8').splitlines()
         csv_reader = csv.reader(file_data)
         emails = [row[0] for row in csv_reader]
 
-        total_emails = len(emails)
-        for i, email in enumerate(emails):
-            try:
-                unique_id = str(uuid.uuid4())
-                tracking_url = url_for('track_click', id=unique_id, _external=True)
-                
-                # Store tracking information in the database
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute('''
-                    INSERT INTO clicks (id, email, clicked) VALUES (%s, %s, %s)
-                ''', (unique_id, email, False))
-                conn.commit()
-                cur.close()
-                conn.close()
+        for email in emails:
+            unique_id = str(uuid.uuid4())
+            tracking_url = url_for('track_click', id=unique_id, _external=True)
+            
+            # Store tracking information in the database
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('''
+                INSERT INTO clicks (id, email, clicked) VALUES (%s, %s, %s)
+            ''', (unique_id, email, False))
+            conn.commit()
+            cur.close()
+            conn.close()
 
-                subject = 'Test Phishing Email'
-                body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
-                
-                msg = MIMEText(body)
-                msg['Subject'] = subject
-                msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
-                msg['To'] = email
-                
-                smtp_server = 'smtp.gmail.com'
-                smtp_port = 587
-                smtp_user = os.getenv('SMTP_USER')
-                smtp_password = os.getenv('SMTP_PASSWORD')
-                
-                with smtplib.SMTP(smtp_server, smtp_port) as server:
-                    server.starttls()
-                    server.login(smtp_user, smtp_password)
-                    server.sendmail(msg['From'], [msg['To']], msg.as_string())
-                
-                progress = int((i + 1) / total_emails * 100)
-                yield str(progress)
-            except Exception as e:
-                logging.error(f"Error in send_phishing_emails for {email}: {e}")
-                yield "0"
-
-    return Response(generate(), mimetype='text/plain')
+            subject = 'Test Phishing Email'
+            body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
+            
+            msg = MIMEText(body)
+            msg['Subject'] = subject
+            msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
+            msg['To'] = email
+            
+            smtp_server = 'smtp.gmail.com'
+            smtp_port = 587
+            smtp_user = os.getenv('SMTP_USER')
+            smtp_password = os.getenv('SMTP_PASSWORD')
+            
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(msg['From'], [msg['To']], msg.as_string())
+        
+        flash('Emails sent successfully!', 'success')
+        return redirect(url_for('index'))
+    except Exception as e:
+        logging.error(f"Error in send_phishing_emails: {e}")
+        flash('Failed to send emails', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/track/<id>')
 def track_click(id):
