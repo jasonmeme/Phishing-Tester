@@ -4,18 +4,62 @@
 <head>
     <title>Phishing Simulation</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function updateProgressBar(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-bar').innerText = percent + '%';
+        }
+
+        async function sendEmails(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const response = await fetch('/send_phishing_emails', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let receivedLength = 0;
+                let result = '';
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    result += decoder.decode(value);
+                    updateProgressBar(parseInt(result));
+                }
+                alert('Emails sent successfully!');
+            } else {
+                alert('Failed to send emails.');
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Phishing Simulation Tool</h1>
-        <form action="/send_phishing_email" method="post">
+        <form onsubmit="sendEmails(event)">
             <label for="email">Enter your email:</label>
             <input type="email" id="email" name="email" required>
             <button type="submit">Send Phishing Email</button>
         </form>
+        <hr>
+        <form id="upload-form" onsubmit="sendEmails(event)">
+            <label for="csv-file">Upload a CSV file with emails:</label>
+            <input type="file" id="csv-file" name="csv-file" accept=".csv" required>
+            <button type="submit">Send Emails from CSV</button>
+        </form>
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar">0%</div>
+        </div>
+        <hr>
+        <a href="/results">View Results</a>
     </div>
     <div class="footer">
-        <p>&copy; 2024 Phishing Simulation Tool by Jason Zhu</p>
+        <p>&copy; 2024 Phishing Simulation Tool</p>
     </div>
 </body>
 </html>
