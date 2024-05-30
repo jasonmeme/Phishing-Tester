@@ -62,8 +62,8 @@ def send_phishing_email():
         msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
         msg['To'] = email
         
-        smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-        smtp_port = int(os.getenv('SMTP_PORT', 587))
+        smtp_server = 'smtp.gmail.com'
+        smtp_port = 587
         smtp_user = os.getenv('SMTP_USER')
         smtp_password = os.getenv('SMTP_PASSWORD')
         
