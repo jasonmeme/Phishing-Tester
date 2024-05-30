@@ -1,13 +1,25 @@
-# api/app.py
-
 from flask import Flask, request, render_template, url_for
 import smtplib
 from email.mime.text import MIMEText
 import uuid
 import sqlite3
 import requests
+import os
 
 app = Flask(__name__)
+
+DATABASE = os.path.join(os.getcwd(), 'phishing.db')
+
+def init_db():
+    if not os.path.exists(DATABASE):
+        conn = sqlite3.connect(DATABASE)
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS clicks
+                    (id TEXT PRIMARY KEY, email TEXT, clicked BOOLEAN)''')
+        conn.commit()
+        conn.close()
+
+init_db()
 
 @app.route('/')
 def index():
@@ -24,7 +36,7 @@ def send_phishing_email():
     shortened_url = response.text
     
     # Store tracking information in the database
-    conn = sqlite3.connect('phishing.db')
+    conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute('''INSERT INTO clicks (id, email, clicked) VALUES (?, ?, ?)''', (unique_id, email, False))
     conn.commit()
@@ -35,15 +47,14 @@ def send_phishing_email():
     
     msg = MIMEText(body)
     msg['Subject'] = subject
-    msg['From'] = 'bobsterthebob55@gmail.com'  # Replace with your email
+    msg['From'] = 'your_email@example.com'  # Replace with your email
     msg['To'] = email
     
     # Update with your SMTP server configuration
-    # Update with your Gmail configuration
-    smtp_server = 'smtp.gmail.com'
-    smtp_port = 587
-    smtp_user = 'bobsterthebob55@gmail.com'
-    smtp_password = 'ttva tajs reka yklc'
+    smtp_server = 'smtp.example.com'  # Replace with your SMTP server
+    smtp_port = 587  # Common SMTP port for TLS
+    smtp_user = 'your_email@example.com'  # Replace with your email
+    smtp_password = 'password'  # Replace with your email password
     
     with smtplib.SMTP(smtp_server, smtp_port) as server:
         server.starttls()  # Upgrade the connection to a secure encrypted SSL/TLS connection
@@ -55,7 +66,7 @@ def send_phishing_email():
 @app.route('/track/<id>')
 def track_click(id):
     # Update database to indicate the link was clicked
-    conn = sqlite3.connect('phishing.db')
+    conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute('''UPDATE clicks SET clicked = ? WHERE id = ?''', (True, id))
     conn.commit()
@@ -65,7 +76,7 @@ def track_click(id):
 
 @app.route('/results')
 def view_results():
-    conn = sqlite3.connect('phishing.db')
+    conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
     c.execute('''SELECT * FROM clicks''')
     rows = c.fetchall()
