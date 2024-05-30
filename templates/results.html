@@ -1,0 +1,22 @@
+<!-- templates/results.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phishing Simulation Results</title>
+</head>
+<body>
+    <h1>Phishing Simulation Results</h1>
+    <table>
+        <tr>
+            <th>Email</th>
+            <th>Clicked</th>
+        </tr>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row[1] }}</td>
+            <td>{{ 'Yes' if row[2] else 'No' }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
