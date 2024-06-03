@@ -57,46 +57,9 @@ def send_phishing_email():
         conn.close()
 
         subject = "Action Required: Verify Your Account Information"
-        body = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verify Your Account</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; }}
-                .email-container {{ max-width: 600px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }}
-                .email-header, .email-footer {{ text-align: center; margin-bottom: 20px; }}
-                .email-body {{ margin-bottom: 20px; }}
-                .btn {{ display: inline-block; padding: 10px 20px; background-color: #007bff; color: #fff; text-decoration: none; border-radius: 5px; font-size: 16px; }}
-                .btn:hover {{ background-color: #0056b3; }}
-            </style>
-        </head>
-        <body>
-            <div class="email-container">
-                <div class="email-header">
-                    <h1>Verify Your Account</h1>
-                </div>
-                <div class="email-body">
-                    <p>Dear [Recipient's Name],</p>
-                    <p>We noticed unusual login activity on your account, and for your security, we need you to verify your account information. Please take a moment to review your recent activity and ensure that your account information is up to date.</p>
-                    <p>To verify your account, please click the button below:</p>
-                    <p><a href="{tracking_url}" class="btn">Verify Your Account</a></p>
-                    <p>If you did not attempt to log in, please disregard this email, and we apologize for any inconvenience.</p>
-                    <p>Thank you for your prompt attention to this matter.</p>
-                    <p>Best regards,</p>
-                    <p>The Security Team<br>Your Company Name<br><a href="mailto:support@yourcompany.com">support@yourcompany.com</a></p>
-                </div>
-                <div class="email-footer">
-                    <p>&copy; 2024 Your Company Name. All rights reserved.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
 
-        msg = MIMEText(body, 'html')
+        msg = MIMEText(body)
         msg['Subject'] = subject
         msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
         msg['To'] = email
