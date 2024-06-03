@@ -109,8 +109,7 @@ def send_phishing_email():
             server.login(smtp_user, smtp_password)
             server.sendmail(msg['From'], [msg['To']], msg.as_string())
         
-        flash('Email sent successfully!', 'success')
-        return redirect(url_for('index'))
+        return 'Phishing email sent!'
     except Exception as e:
         logging.error(f"Error in send_phishing_email: {e}")
         return 'Internal Server Error', 500
