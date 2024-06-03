@@ -79,7 +79,7 @@ def send_phishing_email():
                     <h1>Verify Your Account</h1>
                 </div>
                 <div class="email-body">
-                    <p>Dear {email},</p>
+                    <p>Dear Test,</p>
                     <p>We noticed unusual login activity on your account, and for your security, we need you to verify your account information. Please take a moment to review your recent activity and ensure that your account information is up to date.</p>
                     <p>To verify your account, please click the button below:</p>
                     <p><a href="{tracking_url}" class="btn">Verify Your Account</a></p>
