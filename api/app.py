@@ -56,7 +56,7 @@ def send_phishing_email():
         cur.close()
         conn.close()
 
-        subject = 'Action Needed: Account Verification'
+        subject = 'Test Email Lol'
         body = f"""
         <!DOCTYPE html>
         <html lang="en">
