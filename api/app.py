@@ -96,7 +96,7 @@ def send_phishing_email():
         </html>
         """
 
-        msg = MIMEText(body)
+        msg = MIMEText(body, 'html')
         msg['Subject'] = subject
         msg['From'] = os.getenv('SMTP_USER')  # Use environment variable
         msg['To'] = email
