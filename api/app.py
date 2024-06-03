@@ -56,7 +56,7 @@ def send_phishing_email():
         cur.close()
         conn.close()
 
-        subject = 'Warning: New Activity'
+        subject = 'Webex Alert: Unusual Login Activity Detected'
         body = f"""
         <!DOCTYPE html>
         <html lang="en">
