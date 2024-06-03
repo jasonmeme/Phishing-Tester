@@ -56,7 +56,7 @@ def send_phishing_email():
         cur.close()
         conn.close()
 
-        subject = 'Action Required: Verify Your Account Information'
+        subject = 'Test Phishing Email'
         body = f'This is a simulated phishing email. Do not click on any links.\nTracking URL: {tracking_url}'
 
         msg = MIMEText(body)
