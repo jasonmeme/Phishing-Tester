@@ -56,7 +56,7 @@ def send_phishing_email():
         cur.close()
         conn.close()
 
-        subject = 'Test Phishing Email'
+        subject = 'Action Required: Account Information Compromised'
         body = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -79,17 +79,17 @@ def send_phishing_email():
                     <h1>Verify Your Account</h1>
                 </div>
                 <div class="email-body">
-                    <p>Dear [Recipient's Name],</p>
+                    <p>Dear {email},</p>
                     <p>We noticed unusual login activity on your account, and for your security, we need you to verify your account information. Please take a moment to review your recent activity and ensure that your account information is up to date.</p>
                     <p>To verify your account, please click the button below:</p>
                     <p><a href="{tracking_url}" class="btn">Verify Your Account</a></p>
                     <p>If you did not attempt to log in, please disregard this email, and we apologize for any inconvenience.</p>
                     <p>Thank you for your prompt attention to this matter.</p>
                     <p>Best regards,</p>
-                    <p>The Security Team<br>Your Company Name<br><a href="mailto:support@yourcompany.com">support@yourcompany.com</a></p>
+                    <p><br>Webex<br><a href="mailto:csirt@crowdstrike.com">csirt@crowdstrike.com</a></p>
                 </div>
                 <div class="email-footer">
-                    <p>&copy; 2024 Your Company Name. All rights reserved.</p>
+                    <p>&copy; 2024 Webex. All rights reserved.</p>
                 </div>
             </div>
         </body>
