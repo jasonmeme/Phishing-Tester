@@ -56,7 +56,7 @@ def send_phishing_email():
         cur.close()
         conn.close()
 
-        subject = 'Account Information Compromised'
+        subject = 'Action Needed: Account Verification'
         body = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -141,7 +141,7 @@ def send_phishing_emails():
             cur.close()
             conn.close()
 
-            subject = 'Test Email'
+            subject = 'Action Needed: Account Verification'
             body = f"""
             <!DOCTYPE html>
             <html lang="en">
