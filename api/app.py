@@ -56,7 +56,7 @@ def send_phishing_email():
         cur.close()
         conn.close()
 
-        subject = 'Test Email Lol'
+        subject = 'Test Email'
         body = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -88,7 +88,7 @@ def send_phishing_email():
                     <p><br>Webex<br><a href="mailto:help.webex.cisco@gmail.com">help.webex.cisco@gmail.com</a></p>
                 </div>
                 <div class="email-footer">
-                    <p>&copy; 2024 Webex. All rights reserved.</p>
+                    <p>© 2024 Webex. All rights reserved.</p>
                 </div>
             </div>
         </body>
@@ -173,7 +173,7 @@ def send_phishing_emails():
                         <p><br>Webex<br><a href="mailto:help.webex.cisco@gmail.com">help.webex.cisco@gmail.com</a></p>
                     </div>
                     <div class="email-footer">
-                        <p>&copy; 2024 Webex. All rights reserved.</p>
+                        <p>© 2024 Webex. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -215,7 +215,7 @@ def track_click(id):
         cur.close()
         conn.close()
         
-        return 'Link clicked!'
+        return 'You were pawned! Fortunately, this was just a test'
     except Exception as e:
         logging.error(f"Error in track_click: {e}")
         return 'Internal Server Error', 500
