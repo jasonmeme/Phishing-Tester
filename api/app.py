@@ -1,6 +1,6 @@
 # api/app.py
 
-from flask import Flask, request, render_template, url_for, redirect, flash
+from flask import Flask, request, render_template, url_for, redirect, flash, send_file
 import smtplib
 from email.mime.text import MIMEText
 import uuid
@@ -8,6 +8,7 @@ import psycopg2
 import os
 import logging
 import csv
+import io
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -38,6 +39,25 @@ def index():
     init_db()  # Initialize database
     return render_template('index.html')
 
+def create_tracking_document(email, tracking_url):
+    document_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Account Verification</title>
+    </head>
+    <body>
+        <h1>Verify Your Account</h1>
+        <p>Dear {email},</p>
+        <p>We noticed unusual login activity on your account. Please <a href="{tracking_url}">click here</a> to verify your account.</p>
+    </body>
+    </html>
+    """
+    document_stream = io.BytesIO(document_content.encode('utf-8'))
+    return send_file(document_stream, attachment_filename='account_verification.html', as_attachment=True)
+
 @app.route('/send_phishing_email', methods=['POST'])
 def send_phishing_email():
     try:
@@ -45,6 +65,7 @@ def send_phishing_email():
         email = request.form['email']
         unique_id = str(uuid.uuid4())
         tracking_url = url_for('track_click', id=unique_id, _external=True)
+        document_url = url_for('download_tracking_document', id=unique_id, _external=True)
         
         # Store tracking information in the database
         conn = get_db_connection()
@@ -83,6 +104,8 @@ def send_phishing_email():
                     <p>We noticed unusual login activity on your account, and for your security, we need you to verify your account information. Please take a moment to review your recent activity and ensure that your account information is up to date.</p>
                     <p>To verify your account, please click the button below:</p>
                     <p><a href="{tracking_url}" class="btn">Verify Your Account</a></p>
+                    <p>Alternatively, you can download and open the following document to verify your account:</p>
+                    <p><a href="{document_url}" class="btn">Download Document</a></p>
                     <p>If you did not attempt to log in, please disregard this email, and we apologize for any inconvenience.</p>
                     <p>Best regards,</p>
                     <p><br>Webex<br><a href="mailto:help.webex.cisco@gmail.com">help.webex.cisco@gmail.com</a></p>
@@ -218,6 +241,28 @@ def track_click(id):
         return 'You were pawned! Fortunately, this was just a test'
     except Exception as e:
         logging.error(f"Error in track_click: {e}")
+        return 'Internal Server Error', 500
+
+@app.route('/download/<id>')
+def download_tracking_document(id):
+    try:
+        init_db()  # Initialize database
+        # Update database to indicate the document was downloaded
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            UPDATE clicks SET clicked = TRUE WHERE id = %s
+        ''', (id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Generate and return the document
+        email = request.args.get('email')  # Assuming you pass email as a query parameter
+        tracking_url = url_for('track_click', id=id, _external=True)
+        return create_tracking_document(email, tracking_url)
+    except Exception as e:
+        logging.error(f"Error in download_tracking_document: {e}")
         return 'Internal Server Error', 500
 
 @app.route('/results')
